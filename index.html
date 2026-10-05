@@ -1,0 +1,648 @@
+<!doctype html>
+<html lang="id">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>Game Makhorijul Huruf</title>
+  <script src="https://cdn.tailwindcss.com/3.4.17"></script>
+  <style>
+    :root {
+      --green: #146b4b;
+      --deep: #0d402f;
+      --gold: #f1b94d;
+      --coral: #e9755b;
+      --ink: #18342a;
+      --cream: #f4fae9;
+      --card-border: #deeadc;
+    }
+    * { box-sizing: border-box; }
+    body {
+      margin: 0;
+      color: var(--ink);
+      font-family: 'Nunito', system-ui, -apple-system, sans-serif;
+      background-color: #eaf5d9;
+      background-image: radial-gradient(#b7d7ad 1.2px, transparent 1.2px);
+      background-size: 18px 18px;
+    }
+    .app-shell {
+      width: 100%;
+      min-height: 100vh;
+      display: flex;
+      flex-direction: column;
+      align-items: center;
+      justify-content: flex-start;
+      padding: 16px;
+      overflow: visible;
+    }
+    .quiz-card {
+      width: min(100%, 780px);
+      background: #fff;
+      border-radius: 28px;
+      box-shadow: 0 22px 55px rgba(13,64,47,.18);
+      overflow: visible;
+      border: 1px solid rgba(20,107,75,.12);
+    }
+    .banner {
+      background: linear-gradient(135deg, #0d583f, #1c865e);
+      padding: 20px 26px;
+      color: white;
+      position: relative;
+      overflow: hidden;
+      border-top-left-radius: 28px;
+      border-top-right-radius: 28px;
+    }
+    .banner:after, .banner:before {
+      content: "";
+      position: absolute;
+      border: 1px solid rgba(241,185,77,.55);
+      border-radius: 50%;
+      width: 170px;
+      height: 170px;
+    }
+    .banner:after { right: -60px; top: -80px; }
+    .banner:before { left: -85px; bottom: -110px; }
+    .arabic {
+      font-family: 'Amiri', 'Traditional Arabic', 'Times New Roman', serif;
+      direction: rtl;
+    }
+    .screen {
+      padding: 22px 28px 32px;
+      overflow: visible;
+      overflow-wrap: anywhere;
+      word-break: normal;
+      max-height: calc(100vh - 92px);
+      overflow-y: auto;
+    }
+    .hidden-screen { display: none !important; }
+    .help-box {
+      background: #fff9e9;
+      border: 1px dashed #e7b650;
+      border-radius: 16px;
+      padding: 18px;
+      margin: 20px 0;
+      overflow-wrap: anywhere;
+    }
+    .field {
+      width: 100%;
+      max-width: 420px;
+      padding: 12px 16px;
+      border-radius: 12px;
+      border: 2px solid #cbe3d3;
+      background: #f7fbf6;
+      color: #18342a;
+      font-size: 1rem;
+      font-weight: 700;
+      outline: none;
+      transition: border-color .2s;
+    }
+    .field:focus {
+      border-color: var(--green);
+      background: #fff;
+    }
+    #quiz-screen { overflow: visible; }
+    #question-text, #feedback, #explanation, .choice {
+      overflow-wrap: anywhere;
+      word-break: break-word;
+    }
+    #question-text { max-width: 100%; }
+    .feedback, .explanation {
+      line-height: 1.35;
+      white-space: normal;
+    }
+    .primary-btn, .next-btn {
+      border: 0;
+      border-radius: 12px;
+      padding: 11px 16px;
+      font-size: .92rem;
+      font-weight: 800;
+      letter-spacing: .02em;
+      cursor: pointer;
+      transition: transform .18s, box-shadow .18s;
+      background: var(--coral);
+      color: #fff;
+      box-shadow: 0 8px 18px rgba(233,117,91,.25);
+    }
+    .primary-btn:hover, .next-btn:hover {
+      transform: translateY(-2px);
+      box-shadow: 0 11px 20px rgba(233,117,91,.3);
+    }
+    button:focus-visible {
+      outline: 3px solid var(--gold);
+      outline-offset: 3px;
+    }
+    .quiz-top {
+      display: flex;
+      justify-content: space-between;
+      gap: 14px;
+      align-items: center;
+      flex-wrap: wrap;
+      font-weight: 800;
+      color: #285c45;
+    }
+    .progress-track {
+      height: 9px;
+      background: #e8efe3;
+      border-radius: 20px;
+      overflow: hidden;
+      margin: 10px 0 16px;
+    }
+    .progress-fill {
+      height: 100%;
+      background: linear-gradient(90deg, var(--gold), #f2cb70);
+      border-radius: 20px;
+      transition: width .35s ease;
+    }
+    .category {
+      display: inline-block;
+      background: #e5f4e5;
+      color: #166343;
+      border-radius: 999px;
+      padding: 5px 10px;
+      font-weight: 800;
+      font-size: .72rem;
+      letter-spacing: .05em;
+    }
+    .question {
+      font-size: 1.12rem;
+      line-height: 1.35;
+      font-weight: 800;
+      margin: 10px 0 13px;
+      overflow-wrap: anywhere;
+    }
+    .choices { display: grid; gap: 8px; min-width: 0; }
+    .choice {
+      width: 100%;
+      display: flex;
+      text-align: left;
+      align-items: flex-start;
+      gap: 13px;
+      border: 2px solid #deeadc;
+      background: #fff;
+      border-radius: 15px;
+      padding: 10px 12px;
+      color: #254236;
+      font: inherit;
+      font-weight: 700;
+      cursor: pointer;
+      transition: .18s;
+      line-height: 1.3;
+      min-width: 0;
+    }
+    .choice:hover:not(:disabled) {
+      border-color: #8fc39e;
+      background: #f7fcf5;
+      transform: translateX(3px);
+    }
+    .choice:disabled { cursor: default; }
+    .letter {
+      flex: none;
+      display: grid;
+      place-items: center;
+      width: 24px;
+      height: 24px;
+      border-radius: 50%;
+      background: #e8f2e4;
+      color: #146b4b;
+      font-size: .75rem;
+    }
+    .choice.correct { border-color: #32a36c; background: #e8f8ed; color: #166039; }
+    .choice.correct .letter { background: #32a36c; color: #fff; }
+    .choice.wrong { border-color: #e9755b; background: #fff0ed; color: #a84433; }
+    .choice.wrong .letter { background: #e9755b; color: #fff; }
+    .feedback {
+      min-height: 38px;
+      margin-top: 11px;
+      padding: 10px 12px;
+      border-radius: 11px;
+      font-weight: 800;
+      display: none;
+    }
+    .feedback.show { display: block; }
+    .feedback.good { background: #e9f8ed; color: #17623d; }
+    .feedback.bad { background: #fff0ed; color: #9d4333; }
+    .streak-banner {
+      margin-top: 10px;
+      padding: 12px 16px;
+      background: linear-gradient(135deg, #f1b94d, #f2cb70);
+      color: #5c3e00;
+      border-radius: 12px;
+      font-weight: 900;
+      text-align: center;
+      box-shadow: 0 4px 12px rgba(241,185,77,.4);
+      animation: popIn 0.3s ease-out;
+    }
+    @keyframes popIn {
+      0% { transform: scale(0.8); opacity: 0; }
+      100% { transform: scale(1); opacity: 1; }
+    }
+    .next-wrap { display: flex; justify-content: flex-end; margin-top: 11px; }
+    .next-btn { display: none; background: var(--green); }
+    .next-btn.show { display: inline-block; }
+    .result-score { font-size: 4.2rem; font-weight: 900; color: var(--green); line-height: 1; }
+    .result-score span { font-size: 1.35rem; color: #63927b; }
+    .result-badge {
+      display: inline-block;
+      padding: 8px 14px;
+      background: #fff5d8;
+      color: #815900;
+      border-radius: 999px;
+      font-weight: 900;
+      margin: 14px 0;
+    }
+    .status { font-size: .9rem; color: #5a7568; }
+    .pause-modal {
+      position: fixed;
+      inset: 0;
+      z-index: 20;
+      display: grid;
+      place-items: center;
+      padding: 20px;
+      background: rgba(13,64,47,.58);
+      backdrop-filter: blur(5px);
+    }
+    .pause-modal.hidden-screen { display: none !important; }
+    .pause-card {
+      width: min(100%, 430px);
+      background: #fff;
+      border-radius: 24px;
+      padding: 30px;
+      text-align: center;
+      box-shadow: 0 24px 70px rgba(13,64,47,.3);
+      border: 1px solid rgba(20,107,75,.15);
+    }
+    .explanation {
+      margin-top: 12px;
+      padding: 14px 16px;
+      border-radius: 13px;
+      background: #eef8ed;
+      color: #285c45;
+      font-weight: 700;
+      line-height: 1.5;
+    }
+    .feedback.bad + .explanation { background: #fff7df; color: #6b4d12; }
+
+    /* FOOTER / WATERMARK */
+    .note {
+      font-size: 0.85rem;
+      color: #4b6859;
+      margin-top: 18px;
+      text-align: center;
+      font-weight: 700;
+    }
+    .watermark {
+      font-size: 1rem;
+      color: #146b4b;
+      font-weight: 900;
+      letter-spacing: 1px;
+      margin-top: 4px;
+      text-align: center;
+    }
+
+    @media(max-width:560px){
+      body { overflow-y: auto; }
+      .app-shell { padding: 8px; align-items: center; }
+      .quiz-card { border-radius: 18px; }
+      .banner { padding: 16px 15px; border-top-left-radius: 18px; border-top-right-radius: 18px; }
+      .screen { padding: 17px 14px 28px; }
+      .question { font-size: 1rem; line-height: 1.32; margin: 10px 0 12px; }
+      .choice { padding: 9px 10px; gap: 8px; font-size: .9rem; line-height: 1.28; }
+      .letter { width: 25px; height: 25px; }
+      .feedback, .explanation { font-size: .84rem; line-height: 1.32; padding: 9px 10px; }
+      .result-score { font-size: 3.3rem; }
+      .pause-modal { overflow-y: auto; align-items: start; padding: 16px; }
+      .pause-card { padding: 22px; margin: auto 0; width: min(100%, 430px); }
+    }
+    @media(max-width:380px){
+      .screen { padding-left: 13px; padding-right: 13px; }
+      .question { font-size: 1rem; }
+      .choice { font-size: .88rem; padding: 10px; }
+      .feedback, .explanation { font-size: .82rem; }
+    }
+  </style>
+</head>
+<body>
+  <main class="app-shell">
+    <section class="quiz-card" aria-live="polite">
+      <header class="banner">
+        <p class="m-0 text-sm font-bold tracking-widest" style="color: #fde9a8; letter-spacing: 0.12rem;">KUIS</p>
+        <div class="flex items-end justify-between gap-3 flex-wrap">
+          <h1 class="m-0 mt-1 text-2xl font-black text-white" style="font-size: 32px;">Game Makhorijul Huruf</h1>
+          <span id="quiz-timer" class="text-xs font-black text-yellow-100 leading-none" aria-live="polite">Waktu: 00:00</span>
+        </div>
+      </header>
+
+      <!-- Start Screen -->
+      <section id="start-screen" class="screen text-center">
+        <h2 class="arabic m-0 text-4xl font-bold" style="color: #146b4b; font-size: 38px;">مَخَارِجُ الْحُرُوفِ</h2>
+        <p class="mt-3 text-lg font-extrabold" style="color: #18342a;">Tantangan Master Tajwid (40 Soal)</p>
+        
+        <div class="help-box text-left">
+          <h3 class="m-0 font-black" style="color: #146b4b; font-size: 18px;">Cara bermain</h3>
+          <p class="mb-0 mt-2 leading-relaxed" style="color: #18342a; font-size: 16px; line-height: 1.5;">Pilih satu jawaban terbaik pada setiap soal. Jawaban akan langsung diperiksa, lalu lanjutkan hingga seluruh soal selesai.</p>
+        </div>
+
+        <!-- Input Nama Peserta -->
+        <div class="my-4 flex flex-col items-center">
+          <label for="player" class="mb-2 text-sm font-extrabold" style="color: #146b4b;">Masukkan Nama Peserta:</label>
+          <input class="field" id="player" maxlength="25" placeholder="Nama siswa / santri (opsional)" aria-label="Nama peserta">
+        </div>
+
+        <div class="mt-5 flex justify-center gap-2 flex-wrap">
+          <button class="primary-btn" id="start-btn" type="button">MULAI PERMAINAN 🚀</button>
+        </div>
+      </section>
+
+      <!-- Quiz Screen -->
+      <section id="quiz-screen" class="screen hidden-screen" aria-label="Layar kuis">
+        <div class="quiz-top">
+          <span id="question-counter">Soal 1 dari 40</span>
+          <span id="score-counter">Skor: 0</span>
+        </div>
+        <div class="progress-track" aria-label="Kemajuan kuis">
+          <div id="progress-fill" class="progress-fill"></div>
+        </div>
+        <span id="category" class="category"></span>
+        <h2 id="question-text" class="question"></h2>
+        <div id="choices" class="choices" aria-label="Pilihan jawaban"></div>
+        <div id="feedback" class="feedback" role="status"></div>
+        <div id="streak-banner" class="streak-banner hidden-screen"></div>
+        <div class="next-wrap">
+          <button id="next-btn" class="next-btn" type="button">SOAL BERIKUTNYA →</button>
+        </div>
+      </section>
+
+      <!-- Pause Modal -->
+      <div id="pause-modal" class="pause-modal hidden-screen" role="dialog" aria-modal="true" aria-labelledby="pause-title">
+        <div class="pause-card">
+          <h2 id="pause-title" class="m-0 text-2xl font-black" style="color: #146b4b;">Jeda sejenak</h2>
+          <p id="pause-progress" class="mt-3 font-bold text-emerald-800"></p>
+          <p id="pause-quote" class="mt-3 italic text-emerald-700"></p>
+          <button id="pause-continue" class="primary-btn mt-5" type="button">LANJUTKAN KUIS →</button>
+        </div>
+      </div>
+
+      <!-- Result Screen -->
+      <section id="result-screen" class="screen hidden-screen text-center">
+        <p class="mb-2 font-black tracking-widest" style="color: #146b4b; letter-spacing: 0.12rem;">HASIL PERMAINAN</p>
+        <div id="final-score" class="result-score">0 <span>/ 100</span></div>
+        <p id="result-count" class="status mx-auto max-w-md font-bold text-emerald-900"></p>
+        <div id="result-evaluation" class="result-badge"></div>
+        <p id="result-time" class="status mx-auto max-w-md"></p>
+        <p id="result-description" class="status mx-auto max-w-md mt-2"></p>
+        <button class="primary-btn mt-5" id="restart-btn" type="button">MAIN LAGI 🔄</button>
+      </section>
+    </section>
+
+    <!-- Tulisan di bagian paling bawah -->
+    <p class="note">Aplikasi Pembelajaran Tajwid Interaktif</p>
+    <div class="watermark">✦ Belajar Mengaji Bunda Ammar ✦</div>
+  </main>
+
+  <script>
+    const questions = [
+      ["DEFINISI MAKHARIJ","Secara etimologi dan terminologi, kata 'makharij' merupakan bentuk jamak dari kata 'makhraj' yang memiliki arti teknis sebagai...",["Tempat keluarnya huruf dan tempat dimana suara akan berhenti","Cara membenturkan dua bibir dan menahan nafas di rongga mulut","Getaran suara yang muncul dari pangkal lidah saat membaca mad","Tempat lewatnya udara saat huruf dibaca tebal (isti'la)"],0],
+      ["AL-JAUF","Makhraj Al-Jauf didefinisikan secara khusus dalam modul sebagai tempat keluarnya huruf-huruf mad dari wilayah...",["Rongga mulut dan rongga tenggorokan","Pangkal hidung sampai ke rongga dada","Antara bibir atas dan rongga hidung","Tenggorokan bagian tengah hingga langit-langit"],0],
+      ["AL-JAUF (KONDISI MAD)","Manakah pasangan kondisi harakat dan huruf mad dari makhraj Al-Jauf yang tepat di bawah ini?",["Waau sukun didahului dhommah, Yaa sukun didahului kasrah, Alif didahului fathah","Waau sukun didahului kasrah, Yaa sukun didahului dhommah, Alif didahului fathah","Waau sukun didahului fathah, Yaa sukun didahului fathah, Alif didahului sukun","Waau berharakat dhommah, Yaa berharakat kasrah, Alif berharakat fathah"],0],
+      ["AL-HALQ (PEMBAGIAN)","Makhraj Al-Halq (tenggorokan) terbagi menjadi berapa bagian letak keluarnya huruf?",["3 bagian (bawah, tengah, atas)","2 bagian (pangkal dan ujung)","5 bagian (bawah, tengah, atas, bibir, hidung)","10 bagian lokasi terpisah"],0],
+      ["AL-HALQ BAWAH","Huruf-huruf yang keluar dari tenggorokan bagian bawah adalah...",["Hamzah (ء) dan Ha (ه)","'Ain (ع) dan Ha (ح)","Ghain (غ) dan Kha (خ)","Qaf (ق) dan Kaf (ك)"],0],
+      ["AL-HALQ TENGAH","Letak makhraj bagi huruf 'Ain (ع) dan Ha (ح) berdasarkan modul adalah...",["Tenggorokan bagian tengah","Tenggorokan bagian bawah","Tenggorokan bagian atas","Pangkal lidah menempel tenggorokan"],0],
+      ["AL-HALQ ATAS","Huruf Ghain (غ) dan Kha (خ) keluar dari makhraj...",["Tenggorokan bagian atas","Tenggorokan bagian tengah","Pangkal lidah belakang","Rongga mulut bagian belakang"],0],
+      ["AL-LISAN (PEMBAGIAN)","Makhraj Al-Lisan (lidah) merupakan makhraj terbesar yang terbagi menjadi berapa bagian letak keluar huruf?",["10 bagian","5 bagian","3 bagian","17 bagian"],0],
+      ["AL-LISAN (QAF vs KAF)","Perbedaan makhraj antara huruf Qaf (ق) dan Kaaf (ك) pada Al-Lisan terletak pada...",["Qaf pada pangkal lidah belakang menempel langit-langit atas bagian belakang; Kaaf pada bagian tengah dan belakang","Qaf pada tengah lidah; Kaaf pada ujung lidah menempel gigi seri atas","Qaf pada sisi lidah menempel geraham; Kaaf pada pangkal lidah belakang","Qaf menempel pada gigi seri bawah; Kaaf menempel pada gigi seri atas"],0],
+      ["AL-LISAN (QAF)","Huruf Qaf (ق) keluar saat posisi lidah...",["Pangkal lidah belakang menempel langit-langit atas bagian belakang","Pangkal lidah belakang menempel langit-langit atas bagian tengah","Lidah bagian tengah menempel langit-langit atas","Ujung lidah menempel pada 2 gigi seri bagian atas"],0],
+      ["AL-LISAN (TENGAH LIDAH)","Huruf-huruf yang keluar dari lidah bagian tengah menempel langit-langit atas adalah...",["Jim (ج), Syiin (ش), dan Yaa (ي)","Qaf (ق), Kaaf (ك), dan Lam (ل)","Tho (ط), Daal (د), dan Taa (ت)","Shaad (ص), Siin (س), dan Zaa (ز)"],0],
+      ["AL-LISAN (DHAAD)","Huruf Dhaad (ض) memiliki tempat keluar yang spesifik pada Al-Lisan, yaitu...",["Satu atau kedua sisi lidah menempel pada gigi geraham atas","Ujung lidah menempel pada 2 gigi seri bagian atas","Punggung lidah menempel pada 2 gigi seri bagian bawah","Bibir bawah menempel pada gigi seri atas"],0],
+      ["AL-LISAN (LAM)","Posisi lidah ketika mengucapkan huruf Lam (ل) adalah...",["Ujung lidah menempel pada gigi depan bagian atas","Ujung lidah menempel pada 2 gigi seri bagian bawah","Pangkal lidah belakang menempel langit-langit atas","Satu sisi lidah menempel geraham atas"],0],
+      ["AL-LISAN (NUN)","Makhraj huruf Nun (ن) pada Al-Lisan adalah...",["Ujung lidah menempel pada 2 gigi seri bagian atas","Punggung lidah menempel pada langit-langit keras","Ujung lidah menempel pada 2 gigi seri bagian bawah","Lidah bagian tengah menempel langit-langit atas"],0],
+      ["AL-LISAN (RAA)","Tempat keluarnya huruf Raa (ر) adalah punggung lidah menempel pada 2 gigi seri bagian atas. Pelafalan Raa terbagi menjadi 2 yaitu...",["Tarqiq (tipis) dan Tafkhim (tebal)","Ghunnah (dengung) dan Mad (panjang)","Isti'la (naik) dan Infitah (terbuka)","Siddah (kuat) dan Rakhawah (lunak)"],0],
+      ["AL-LISAN (THO, DAAL, TAA)","Huruf Tho (ط), Daal (د), dan Taa (ت) keluar dari makhraj yang sama yaitu...",["Ujung lidah sampai awal punggung lidah menempel pada 2 gigi seri bagian atas","Ujung lidah menempel pada 2 gigi seri bagian bawah","Ujung lidah bagian atas menempel pada ujung 2 gigi seri bagian atas","Tengah lidah menempel pada langit-langit atas"],0],
+      ["AL-LISAN (PENYEBAB THO DIBACA TEBAL)","Mengapa pada kelompok huruf (ط, د, ت), khusus untuk huruf Tho (ط) posisi lidah diangkat?",["Karena huruf Tho termasuk kelompok huruf Isti'la","Karena huruf Tho keluar dari rongga Al-Jauf","Karena huruf Tho dibaca dengan dengung (ghunnah)","Karena huruf Tho diproduksi dari pangkal hidung"],0],
+      ["AL-LISAN (SHAAD, SIIN, ZAA)","Huruf Shaad (ص), Siin (س), dan Zaa (ز) memiliki tempat keluar pada...",["Ujung lidah menempel pada 2 gigi seri bagian bawah","Ujung lidah menempel pada 2 gigi seri bagian atas","Ujung lidah bagian atas menempel pada ujung 2 gigi seri bagian atas","Satu atau kedua sisi lidah menempel geraham atas"],0],
+      ["AL-LISAN (KHUSUS SHAAD)","Pada kelompok huruf (ص, س, ز), huruf manakah yang lidahnya diangkat karena termasuk huruf Isti'la?",["Shaad (ص)","Siin (س)","Zaa (ز)","Ketiganya sama-sama diangkat"],0],
+      ["AL-LISAN (TSA, DZAL, ZHO)","Di manakah makhraj huruf Tsa (ث), Dzal (ذ), dan Zho (ظ)?",["Ujung lidah bagian atas menempel pada ujung 2 gigi seri bagian atas","Ujung lidah menempel pada 2 gigi seri bagian bawah","Punggung lidah menempel pada 2 gigi seri bagian atas","Tengah lidah menempel pada langit-langit atas"],0],
+      ["ASY-SYAFATAN (PEMBAGIAN)","Makhraj Asy-Syafatan (bibir) terbagi menjadi berapa bagian letak keluarnya huruf?",["2 bagian","3 bagian","4 bagian","1 bagian saja"],0],
+      ["ASY-SYAFATAN (FA)","Makhraj huruf Fa (ف) secara tepat adalah...",["Bibir bawah menempel pada 2 gigi seri atas","Bertemunya kedua belah bibir dalam keadaan tertutup","Bibir atas menempel pada 2 gigi seri bawah","Bertemunya kedua belah bibir dalam keadaan sedikit terbuka"],0],
+      ["ASY-SYAFATAN (BA, MIM, WAU)","Huruf Ba (ب), Mim (م), dan Wau (و) sama-sama keluar dari bertemunya kedua belah bibir. Bagaimana perbedaan posisi bibir saat pengucapannya?",["Ba dan Mim bibir tertutup (dengan penekanan pada Ba); Wau bibir sedikit terbuka","Ba bibir terbuka; Mim dan Wau bibir tertutup rapat","Ba dan Wau bibir sedikit terbuka; Mim bibir terbuka lebar","Ketiganya diucapkan dengan posisi bibir tertutup rapat tanpa perbedaan"],0],
+      ["AL-KHAYSYUM","Al-Khaysyum secara bahasa dan teknis berarti pangkal hidung. Fungsi utama makhraj ini adalah tempat keluarnya...",["Huruf-huruf dengan bunyi ghunnah, yakni mim atau nun tasydid","Huruf-huruf mad panjang 2 harakat","Huruf-huruf isti'la yang dibaca tebal","Suara hembusan nafas dari huruf-huruf hams"],0],
+      ["HURUF ISTI'LA (DEFINISI)","Apakah yang dimaksud dengan 'Huruf Isti'la' menurut modul?",["Huruf yang ketika diucapkan suara naik ke langit-langit mulut sehingga dibaca tebal","Huruf yang ketika diucapkan suara keluar dari rongga hidung dengan dengung","Huruf yang dibaca panjang ketika berada di akhir ayat","Huruf yang diucapkan dengan menempelkan dua bibir secara rapat"],0],
+      ["HURUF ISTI'LA (JUMLAH & ANGGOTA)","Berapakah jumlah huruf Isti'la dan apa sajakah huruf-huruf tersebut?",["7 huruf: خ, ص, ض, غ, ط, ق, ظ","6 huruf: أ, هـ, ع, ح, غ, خ","3 huruf: ا, و, ي","5 huruf: ب, ج, د, ط, ق"],0],
+      ["ANALISIS MAKHRAJ (B)","Ketika membaca huruf Ba (ب) sukun dalam kata 'بَبْ', makhraj manakah yang digunakan?",["Asy-Syafatan (bertemunya kedua belah bibir secara tertutup & penekanan)","Al-Jauf (rongga mulut & tenggorokan)","Al-Lisan (ujung lidah pada gigi seri)","Al-Khaysyum (pangkal hidung)"],0],
+      ["ANALISIS MAKHRAJ (GHUNNAH)","Dalam lafaz 'إِنَّ' dan 'أُمَّ', bunyi dengung (ghunnah) yang terpancar bersumber dari makhraj...",["Al-Khaysyum","Al-Jauf","Al-Halq Bawah","Asy-Syafatan"],0],
+      ["IDENTIFIKASI MAKHRAJ (GH)","Huruf Ghain (غ) tergolong ke dalam makhraj Al-Halq bagian mana dan memiliki sifat suara seperti apa?",["Tenggorokan bagian atas & termasuk huruf Isti'la (dibaca tebal)","Tenggorokan bagian tengah & termasuk huruf mad","Pangkal lidah belakang & dibaca tipis (tarqiq)","Tenggorokan bagian bawah & dibaca dengan ghunnah"],0],
+      ["IDENTIFIKASI MAKHRAJ (TSA vs ZHO)","Meskipun Tsa (ث) dan Zho (ظ) sama-sama keluar dari 'ujung lidah bagian atas menempel pada ujung 2 gigi seri atas', perbedaan mendasar keduanya adalah...",["Zho termasuk huruf Isti'la (dibaca tebal), sedangkan Tsa tidak","Tsa keluar dari Al-Khaysyum, sedangkan Zho dari Al-Halq","Zho diucapkan dengan bibir tertutup rapat, sedangkan Tsa terbuka","Tsa termasuk huruf mad, sedangkan Zho huruf ghunnah"],0],
+      ["PERBANDINGAN MAKHRAJ (NUN vs MIM TAS YDID)","Manakah pernyataan yang BENAR mengenai makhraj Nun (ن) dan Mim (م) ketika mendapat tasydid?",["Pengucapan dasar hurufnya dari Al-Lisan/Asy-Syafatan, namun bunyi ghunnahnya keluar dari Al-Khaysyum","Seluruh suara dan hurufnya berpindah total ke makhraj Al-Jauf","Nun tasydid keluar dari Al-Halq Tengah, sedangkan Mim tasydid dari Al-Halq Atas","Kedua huruf tidak lagi memerlukan makhraj asal dan hanya menggunakan Al-Halq"],0],
+      ["MEMBEDAKAN AL-JAUF DAN AL-HALQ","Manakah di antara huruf berikut yang KELUAR dari Al-Jauf saat memanjang (mad)?",["Alif didahului fathah (contoh: َ ا)","Hamzah berharakat fathah (contoh: أَ)","Ha berharakat dhommah (contoh: هُ)","'Ain berharakat kasrah (contoh: عِ)"],0],
+      ["KLASIFIKASI HURUF TEBAL","Manakah di antara kelompok huruf berikut yang SELURUHNYA merupakan huruf Isti'la (suara naik ke langit-langit)?",["خ, ص, ض, غ, ط, ق, ظ","ء, هـ, ع, ح, غ, خ","ب, م, و, ف, l, ن","ط, د, ت, ص, س, ز"],0],
+      ["ANALISIS BENTUK BIBIR (WAU SUKUN MAD)","Ketika membaca Wau sukun yang didahului dhommah (seperti pada 'بُو'), makhraj utamanya adalah...",["Al-Jauf (rongga mulut & tenggorokan)","Asy-Syafatan (bibir sedikit terbuka)","Al-Khaysyum (pangkal hidung)","Al-Halq (tenggorokan bawah)"],0],
+      ["PEMAHAMAN DETAIL (AL-LISAN)","Pernyataan mana yang TEPAT mengenai tempat keluar huruf Daal (د) dan Taa (ت)?",["Ujung lidah sampai awal punggung lidah menempel pada 2 gigi seri bagian atas","Ujung lidah menempel pada 2 gigi seri bagian bawah","Satu sisi lidah menempel pada gigi geraham atas","Pangkal lidah belakang menempel langit-langit atas bagian tengah"],0],
+      ["PEMAHAMAN DETAIL (AL-LISAN ZAA & SIIN)","Di manakah posisi ujung lidah saat mengucapkan huruf Zaa (ز) dan Siin (س)?",["Menempel pada 2 gigi seri bagian bawah","Menempel pada 2 gigi seri bagian atas","Menempel pada langit-langit keras bagian belakang","Menempel pada bibir bawah bagian dalam"],0],
+      ["EVALUASI MAKHRAJ (HAMZAH vs 'AIN)","Di mana letak perbedaan makhraj antara Hamzah (ء) dan 'Ain (ع)?",["Hamzah di Tenggorokan bagian bawah, 'Ain di Tenggorokan bagian tengah","Hamzah di Al-Jauf, 'Ain di Al-Khaysyum","Hamzah di Pangkal lidah, 'Ain di Ujung lidah","Hamzah di Tenggorokan bagian atas, 'Ain di Tenggorokan bagian bawah"],0],
+      ["EVALUASI MAKHRAJ (DHAAD vs QAF)","Manakah perbandingan makhraj yang TEPAT antara Dhaad (ض) dan Qaf (ق)?",["Dhaad pada sisi lidah menempel geraham atas; Qaf pada pangkal lidah belakang menempel langit-langit atas belakang","Dhaad pada ujung lidah gigi bawah; Qaf pada tengah lidah","Dhaad pada bibir bawah; Qaf pada tenggorokan atas","Keduanya keluar dari makhraj Al-Halq bagian bawah"],0],
+      ["STIMULASI APLIKASI AYAT","Pada potongan ayat 'فَسَبِّحْ بِحَمْدِ', huruf Ha (ح) pada kata 'بِحَمْدِ' keluar dari makhraj...",["Al-Halq (tenggorokan bagian tengah)","Al-Halq (tenggorokan bagian bawah)","Al-Jauf (rongga mulut)","Al-Lisan (pangkal lidah)"],0],
+      ["REKAPITULASI 5 MAKHRAJ UTAMA","Manakah urutan 5 pembagian makhraj utama yang sesuai dengan materi modul?",["Al-Jauf, Al-Halq, Al-Lisan, Asy-Syafatan, Al-Khaysyum","Al-Halq, Al-Lisan, Al-Jauf, Al-Khafi, Al-Khaysyum","Al-Lisan, Asy-Syafatan, Al-Ghunnah, Al-Jauf, Al-Halq","Al-Jauf, Al-Shorf, Al-Lisan, Asy-Syafatan, Al-Khaysyum"],0]
+    ];
+
+    let current = 0, score = 0, answered = false, playQuestions = [], timerStartedAt = 0, elapsedSeconds = 0, timerInterval = null, pauseTimeout = null;
+    let streakCount = 0, playerName = "";
+    const $ = id => document.getElementById(id);
+    const shuffle = a => [...a].sort(() => Math.random() - .5);
+
+    function sound(ok, isStreak = false) {
+      try {
+        const Ctx = window.AudioContext || window.webkitAudioContext;
+        if (!Ctx) return;
+        const ctx = new Ctx(), o = ctx.createOscillator(), g = ctx.createGain();
+        
+        if (isStreak) {
+          o.type = "triangle";
+          o.frequency.setValueAtTime(523.25, ctx.currentTime);
+          o.frequency.setValueAtTime(659.25, ctx.currentTime + 0.1);
+          o.frequency.setValueAtTime(783.99, ctx.currentTime + 0.2);
+          o.frequency.setValueAtTime(1046.50, ctx.currentTime + 0.3);
+          g.gain.setValueAtTime(.1, ctx.currentTime);
+          g.gain.exponentialRampToValueAtTime(.001, ctx.currentTime + 0.5);
+          o.connect(g); g.connect(ctx.destination);
+          o.start(); o.stop(ctx.currentTime + 0.5);
+          return;
+        }
+
+        o.type = ok ? "sine" : "sawtooth";
+        o.frequency.value = ok ? 660 : 180;
+        g.gain.setValueAtTime(.06, ctx.currentTime);
+        g.gain.exponentialRampToValueAtTime(.001, ctx.currentTime + (ok ? .18 : .28));
+        o.connect(g); g.connect(ctx.destination);
+        o.start(); o.stop(ctx.currentTime + (ok ? .18 : .28));
+      } catch(e){}
+    }
+
+    function begin() {
+      clearTimeout(pauseTimeout);
+      clearInterval(timerInterval);
+      
+      playerName = $("player").value.trim();
+      current = 0; score = 0; answered = false; streakCount = 0;
+      timerStartedAt = Date.now(); elapsedSeconds = 0;
+      $('quiz-timer').textContent = 'Waktu: 00:00';
+      
+      timerInterval = setInterval(() => {
+        elapsedSeconds = Math.floor((Date.now() - timerStartedAt) / 1000);
+        $('quiz-timer').textContent = `Waktu: ${formatTime(elapsedSeconds)}`;
+      }, 1000);
+
+      playQuestions = questions.map(q => ({
+        category: q[0],
+        text: q[1],
+        options: shuffle(q[2].map((text, index) => ({ text, correct: index === q[3] })))
+      }));
+
+      $("start-screen").classList.add("hidden-screen");
+      $("result-screen").classList.add("hidden-screen");
+      $("quiz-screen").classList.remove("hidden-screen");
+      render();
+    }
+
+    function render() {
+      answered = false;
+      const q = playQuestions[current];
+      $("question-counter").textContent = `Soal ${current + 1} dari ${questions.length}`;
+      $("score-counter").textContent = `Skor: ${score}`;
+      $("progress-fill").style.width = `${(current / questions.length) * 100}%`;
+      $("category").textContent = q.category;
+      $("question-text").textContent = q.text;
+      $("feedback").className = "feedback";
+      $("streak-banner").classList.add("hidden-screen");
+      $("next-btn").classList.remove("show");
+      
+      const oldExplanation = $("explanation");
+      if (oldExplanation) oldExplanation.remove();
+      
+      const box = $("choices");
+      box.replaceChildren();
+      q.options.forEach((option, index) => {
+        const b = document.createElement("button");
+        b.type = "button";
+        b.className = "choice";
+        b.innerHTML = `<span class="letter">${"ABCD"[index]}</span><span>${option.text}</span>`;
+        b.addEventListener("click", () => choose(index));
+        box.appendChild(b);
+      });
+    }
+
+    function choose(index) {
+      if (answered) return;
+      answered = true;
+      const q = playQuestions[current], buttons = [...$("choices").children], ok = q.options[index].correct;
+      
+      buttons.forEach((b, i) => {
+        b.disabled = true;
+        if (q.options[i].correct) b.classList.add("correct");
+      });
+      
+      const streakBanner = $("streak-banner");
+
+      if (!ok) {
+        buttons[index].classList.add("wrong");
+        streakCount = 0;
+        sound(false);
+      } else {
+        score++;
+        streakCount++;
+        
+        if (streakCount > 0 && streakCount % 5 === 0) {
+          streakBanner.textContent = `🔥 Luar biasa! Kamu berhasil menjawab ${streakCount} soal benar secara berturut-turut! Selamat! 🎉`;
+          streakBanner.classList.remove("hidden-screen");
+          sound(true, true);
+        } else {
+          sound(true);
+        }
+      }
+      
+      $("score-counter").textContent = `Skor: ${score}`;
+      
+      const f = $("feedback");
+      f.className = `feedback show ${ok ? "good" : "bad"}`;
+      const correctIndex = q.options.findIndex(option => option.correct), correctOption = q.options[correctIndex];
+      f.textContent = ok ? "✅ Benar!" : "❌ Belum tepat.";
+      
+      let explanation = $("explanation");
+      if (!explanation) {
+        explanation = document.createElement("div");
+        explanation.id = "explanation";
+        explanation.className = "explanation";
+        f.after(explanation);
+      }
+      explanation.textContent = ok ? `Penjelasan: ${correctOption.text}.` : `Jawaban Benar: ${"ABCD"[correctIndex]}. ${correctOption.text}.`;
+      
+      $("next-btn").classList.add("show");
+      $("next-btn").textContent = current === questions.length - 1 ? "SUBMIT & LIHAT HASIL" : "SOAL BERIKUTNYA →";
+    }
+
+    function formatTime(seconds) {
+      const m = Math.floor(seconds / 60).toString().padStart(2, '0');
+      const s = (seconds % 60).toString().padStart(2, '0');
+      return `${m}:${s}`;
+    }
+
+    function openPause() {
+      clearTimeout(pauseTimeout);
+      const completed = current + 1;
+      const quotes = ["Hebat! Soal tuntas. Rehat sejenak, fokus lagi!", "Makin mantap! Lanjut!", "Tarik napas, fokus kembali!", "Setiap kesalahan adalah langkah menuju paham."];
+      $("pause-progress").textContent = `${completed} soal telah selesai.`;
+      $("pause-quote").textContent = quotes[Math.floor(Math.random() * quotes.length)];
+      $("pause-modal").classList.remove("hidden-screen");
+      $("pause-continue").focus();
+      pauseTimeout = setTimeout(() => $("pause-modal").classList.add("hidden-screen"), 5000);
+    }
+
+    function next() {
+      if (current < questions.length - 1) {
+        current++;
+        render();
+        if (current % 10 === 0) openPause();
+        return;
+      }
+      results();
+    }
+
+    function results() {
+      clearTimeout(pauseTimeout);
+      clearInterval(timerInterval);
+      elapsedSeconds = timerStartedAt ? Math.floor((Date.now() - timerStartedAt) / 1000) : 0;
+      
+      $("quiz-screen").classList.add("hidden-screen");
+      $("result-screen").classList.remove("hidden-screen");
+      $("progress-fill").style.width = "100%";
+      
+      const value = Math.round(score / questions.length * 100);
+      $("final-score").innerHTML = `${value} <span>/ 100</span>`;
+      
+      const displayName = playerName ? `<b>${playerName}</b>` : "Kamu";
+      $("result-count").innerHTML = `Peserta: ${displayName}<br>Jawaban benar: ${score} dari ${questions.length} soal • KKM: 80`;
+      $("result-time").textContent = `Waktu mengerjakan: ${Math.floor(elapsedSeconds / 60)} menit ${elapsedSeconds % 60} detik`;
+      
+      const passed = value >= 80;
+      $("result-evaluation").textContent = passed ? "LULUS" : "REMIDI";
+      $("result-evaluation").style.background = passed ? "#e8f8ed" : "#fff0ed";
+      $("result-evaluation").style.color = passed ? "#17623d" : "#a84433";
+      $("result-description").textContent = passed ? "Selamat, nilai kamu melampaui KKM." : "Nilai kamu belum melampaui KKM 80. Yuk, pelajari lagi dan coba kembali.";
+    }
+
+    $("start-btn").addEventListener("click", begin);
+    $("restart-btn").addEventListener("click", begin);
+    $("next-btn").addEventListener("click", next);
+    $("pause-continue").addEventListener("click", () => {
+      clearTimeout(pauseTimeout);
+      $("pause-modal").classList.add("hidden-screen");
+    });
+    
+    document.addEventListener("keydown", event => {
+      if ($("pause-modal").classList.contains("hidden-screen")) return;
+      if (event.key === "Escape" || event.key === "Enter") {
+        event.preventDefault();
+        $("pause-modal").classList.add("hidden-screen");
+        $("pause-continue").blur();
+      }
+    });
+  </script>
+</body>
+</html>
